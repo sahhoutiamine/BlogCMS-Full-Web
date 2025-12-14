@@ -159,7 +159,7 @@ Step-by-Step Setup
 Clone the Repository
 
 bash
-git clone https://github.com/yourusername/blogcms.git
+git clone https://github.com/sahhoutiamine/BlogCMS-Full-Web.git
 cd blogcms
 Configure Database
 
@@ -175,7 +175,7 @@ Ensure proper file permissions
 
 Access the Application
 
-Open browser: http://localhost/blogcms/
+Open browser: http://localhost/BlogCMS-Full-Web/
 
 Use demo accounts for testing
 
