@@ -32,10 +32,16 @@ if (!$art) {
 // Handle comment submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_comment'])) {
     $content = $_POST['content'] ?? '';
-    $author = $_POST['author_name'] ?? 'Anonymous';
     
-    if (!empty($content) && !empty($author)) {
-        $comment->add($content, $author, $article_id);
+    // Get the username if user is logged in, otherwise use Anonymous
+    if (User::isLoggedIn()) {
+        $author_username = User::getCurrentUsername(); // This gets the actual username
+    } else {
+        $author_username = $_POST['author_name'] ?? 'Anonymous';
+    }
+    
+    if (!empty($content) && !empty($author_username)) {
+        $comment->add($content, $author_username, $article_id);
         header("Location: article.php?id=$article_id&commented=1");
         exit;
     }
@@ -153,12 +159,23 @@ $comments = $comment->getByArticle($article_id);
         <div class="mb-8 bg-gray-50 p-4 rounded-lg">
             <h3 class="text-lg font-semibold mb-3">Add a Comment</h3>
             <form method="POST">
-                <div class="mb-3">
-                    <input type="text" name="author_name" required
-                        placeholder="Your name"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value="<?php echo User::isLoggedIn() ? escape(User::currentUser()['name']) : ''; ?>">
-                </div>
+                <?php if (!User::isLoggedIn()): ?>
+                    <!-- Show name field only for non-logged in users -->
+                    <div class="mb-3">
+                        <input type="text" name="author_name" required
+                            placeholder="Your name"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                <?php else: ?>
+                    <!-- For logged-in users, show their username as info -->
+                    <div class="mb-3 p-2 bg-blue-50 rounded">
+                        <p class="text-sm text-gray-700">
+                            Commenting as: <span class="font-semibold"><?php echo escape(User::getCurrentUsername()); ?></span>
+                            <input type="hidden" name="author_name" value="<?php echo escape(User::getCurrentUsername()); ?>">
+                        </p>
+                    </div>
+                <?php endif; ?>
+                
                 <div class="mb-3">
                     <textarea name="content" rows="3" required
                         placeholder="Write your comment..."
@@ -182,7 +199,8 @@ $comments = $comment->getByArticle($article_id);
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <div class="flex justify-between items-start mb-2">
                             <div>
-                                <span class="font-semibold text-gray-800"><?php echo escape($com['author_username']); ?></span>
+                                <!-- Show display_name instead of author_username -->
+                                <span class="font-semibold text-gray-800"><?php echo escape($com['display_name']); ?></span>
                                 <?php if ($com['type'] === 'spam'): ?>
                                     <span class="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Spam</span>
                                 <?php endif; ?>

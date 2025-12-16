@@ -16,7 +16,12 @@ class Comment {
     }
     
     public function getByArticle($article_id) {
-        $sql = "SELECT * FROM comments WHERE article_id = ? ORDER BY create_date DESC";
+        $sql = "SELECT c.*, 
+                COALESCE(CONCAT(u.name, ' ', u.last_name), u.name, c.author_username) as display_name
+                FROM comments c 
+                LEFT JOIN users u ON c.author_username = u.username 
+                WHERE c.article_id = ? 
+                ORDER BY c.create_date DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$article_id]);
         return $stmt->fetchAll();
@@ -35,7 +40,11 @@ class Comment {
     }
     
     public function getAll($limit = 50) {
-        $sql = "SELECT c.*, a.title as article_title FROM comments c 
+        $sql = "SELECT c.*, 
+                COALESCE(CONCAT(u.name, ' ', u.last_name), u.name, c.author_username) as display_name,
+                a.title as article_title 
+                FROM comments c 
+                LEFT JOIN users u ON c.author_username = u.username 
                 LEFT JOIN articles a ON c.article_id = a.article_id 
                 ORDER BY c.create_date DESC LIMIT ?";
         $stmt = $this->db->prepare($sql);
