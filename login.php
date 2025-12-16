@@ -20,6 +20,9 @@ if (User::isLoggedIn()) {
 $error = null;
 $user = new User();
 
+// Get first 3 users for display
+$firstUsers = $user->getFirstThreeUsers();
+
 // Handle login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
@@ -40,6 +43,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - BlogCMS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .password-hash {
+            font-size: 0.7rem;
+            word-break: break-all;
+            background-color: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
 <div class="min-h-screen flex items-center justify-center px-4">
@@ -57,13 +70,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-2">Username</label>
                 <input type="text" name="username" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your username"
+                    value="<?php echo isset($_POST['username']) ? escape($_POST['username']) : ''; ?>">
             </div>
 
             <div>
                 <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
                 <input type="password" name="password" required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your password">
+                <p class="text-xs text-gray-500 mt-1">Password is the hash string shown below</p>
             </div>
 
             <button type="submit"
@@ -78,12 +95,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </a>
 
         <div class="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p class="text-sm text-gray-600 font-semibold mb-2">Demo Accounts:</p>
-            <p class="text-xs text-gray-600">Admin: admin / admin123</p>
-            <p class="text-xs text-gray-600">Author: author1 / author123</p>
-            <p class="text-xs text-gray-600 mt-2">From Database:</p>
-            <p class="text-xs text-gray-600">Admin: admin_blog / password</p>
-            <p class="text-xs text-gray-600">Author: jean_dupont / password</p>
+            <p class="text-sm text-gray-600 font-semibold mb-2">Sample Users from Database:</p>
+            <?php if (!empty($firstUsers)): ?>
+                <?php foreach ($firstUsers as $sampleUser): ?>
+                    <div class="mb-3 p-2 bg-white rounded border">
+                        <p class="text-xs text-gray-600 mb-1">
+                            <span class="font-semibold"><?php echo escape($sampleUser['full_name']); ?></span> 
+                            (<?php echo escape($sampleUser['role']); ?>)
+                        </p>
+                        <p class="text-xs text-gray-600 mb-1">
+                            <span class="font-medium">Username:</span> 
+                            <span class="text-blue-600"><?php echo escape($sampleUser['username']); ?></span>
+                        </p>
+                        <p class="text-xs text-gray-600">
+                            <span class="font-medium">Password:</span>
+                        </p>
+                        <div class="password-hash mt-1">
+                            <?php echo escape($sampleUser['pw']); ?>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Copy and paste the entire hash above as password</p>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p class="text-xs text-gray-600">No users found in database</p>
+            <?php endif; ?>
+            <p class="text-xs text-gray-500 mt-2">All users use the hash string as their password</p>
         </div>
     </div>
 </div>

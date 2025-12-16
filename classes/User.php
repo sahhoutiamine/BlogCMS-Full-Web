@@ -10,36 +10,32 @@ class User {
     }
     
     public function login($username, $password) {
-        if ($username === 'admin' && $password === 'admin123') {
-            $_SESSION['user'] = [
-                'username' => 'admin',
-                'name' => 'System Admin',
-                'role' => 'admin'
-            ];
-            return true;
-        }
-        
-        if ($username === 'author1' && $password === 'author123') {
-            $_SESSION['user'] = [
-                'username' => 'author1',
-                'name' => 'Demo Author',
-                'role' => 'author'
-            ];
-            return true;
-        }
-        
         $user = $this->getByUsername($username);
         
-        if ($user && $user['pw'] === '$2y$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW') {
+        // Check if user exists and password matches exactly
+        if ($user && $password === $user['pw']) {
             $_SESSION['user'] = [
                 'username' => $user['username'],
-                'name' => $user['name'],
+                'name' => $this->getFullName($user),
                 'role' => $user['role']
             ];
             return true;
         }
         
         return false;
+    }
+    
+    private function getFullName($user) {
+        $name = trim($user['name'] ?? '');
+        $lastName = trim($user['last_name'] ?? '');
+        
+        if ($name && $lastName) {
+            return $name . ' ' . $lastName;
+        } elseif ($name) {
+            return $name;
+        } else {
+            return $user['username'];
+        }
     }
     
     public function logout() {
@@ -66,6 +62,19 @@ class User {
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$username]);
         return $stmt->fetch();
+    }
+    
+    public function getFirstThreeUsers() {
+        $sql = "SELECT username, name, last_name, role, email, pw FROM users ORDER BY username LIMIT 3";
+        $stmt = $this->db->query($sql);
+        $users = $stmt->fetchAll();
+        
+        // Add full name to each user
+        foreach ($users as &$user) {
+            $user['full_name'] = $this->getFullName($user);
+        }
+        
+        return $users;
     }
     
     public function getAllUsers() {
