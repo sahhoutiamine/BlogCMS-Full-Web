@@ -17,7 +17,11 @@ class Comment {
     
     public function getByArticle($article_id) {
         $sql = "SELECT c.*, 
-                COALESCE(CONCAT(u.name, ' ', u.last_name), u.name, c.author_username) as display_name
+                CASE 
+                    WHEN c.author_username IS NULL THEN 'Guest'
+                    WHEN u.username IS NOT NULL THEN COALESCE(CONCAT(u.name, ' ', u.last_name), u.name)
+                    ELSE c.author_username 
+                END as display_name
                 FROM comments c 
                 LEFT JOIN users u ON c.author_username = u.username 
                 WHERE c.article_id = ? 
@@ -42,7 +46,11 @@ class Comment {
     public function getAll($limit = 50) {
         $limit = intval($limit);
         $sql = "SELECT c.*, 
-                COALESCE(CONCAT(u.name, ' ', u.last_name), u.name, c.author_username) as display_name,
+                CASE 
+                    WHEN c.author_username IS NULL THEN 'Guest'
+                    WHEN u.username IS NOT NULL THEN COALESCE(CONCAT(u.name, ' ', u.last_name), u.name)
+                    ELSE c.author_username 
+                END as display_name,
                 a.title as article_title 
                 FROM comments c 
                 LEFT JOIN users u ON c.author_username = u.username 
