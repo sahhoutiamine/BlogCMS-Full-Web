@@ -48,6 +48,38 @@ class Article {
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([$id]);
     }
+
+    public function isAuthor($article_id, $username) {
+        $sql = "SELECT author_username FROM articles WHERE article_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$article_id]);
+        $article = $stmt->fetch();
+        
+        return $article && $article['author_username'] === $username;
+    }
+    
+    // Add update method
+    public function update($id, $title, $content, $category_id, $status) {
+        $sql = "UPDATE articles SET title = ?, content = ?, category_id = ?, article_status = ?, modify_date = NOW() WHERE article_id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$title, $content, $category_id, $status, $id]);
+    }
+    
+    // Add method to get articles by author
+    public function getByAuthor($username, $include_drafts = true) {
+        $sql = "SELECT a.*, c.category_name FROM articles a 
+                LEFT JOIN categories c ON a.category_id = c.category_id 
+                WHERE a.author_username = ?";
+        
+        if (!$include_drafts) {
+            $sql .= " AND a.article_status = 'Published'";
+        }
+        
+        $sql .= " ORDER BY a.create_date DESC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$username]);
+        return $stmt->fetchAll();
+    }
     
     public function count() {
         $sql = "SELECT COUNT(*) as total FROM articles";

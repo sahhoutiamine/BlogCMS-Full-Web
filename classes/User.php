@@ -12,7 +12,6 @@ class User {
     public function login($username, $password) {
         $user = $this->getByUsername($username);
         
-        // Check if user exists and password matches exactly
         if ($user && $password === $user['pw']) {
             $_SESSION['user'] = [
                 'username' => $user['username'],
@@ -69,7 +68,6 @@ class User {
         $stmt = $this->db->query($sql);
         $users = $stmt->fetchAll();
         
-        // Add full name to each user
         foreach ($users as &$user) {
             $user['full_name'] = $this->getFullName($user);
         }
@@ -94,7 +92,10 @@ class User {
     }
     
     public static function getCurrentUsername() {
-        return $_SESSION['user']['username'] ?? null;
+        if (isset($_SESSION['user']) && isset($_SESSION['user']['username'])) {
+            return $_SESSION['user']['username'];
+        }
+        return null;
     }
 }
 ?>

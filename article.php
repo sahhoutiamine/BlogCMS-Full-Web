@@ -55,6 +55,10 @@ if (isset($_GET['delete_comment']) && User::isAdmin()) {
     exit;
 }
 
+// Check if current user is the author of this article
+$current_username = User::getCurrentUsername();
+$is_author = User::isLoggedIn() && ($current_username === $art['author_username']);
+
 // Get comments
 $comments = $comment->getByArticle($article_id);
 ?>
@@ -84,6 +88,12 @@ $comments = $comment->getByArticle($article_id);
                     <span class="text-gray-700">
                         Welcome, <span class="font-semibold"><?php echo escape(User::currentUser()['name']); ?></span>
                     </span>
+                    <?php if (User::isAuthor()): ?>
+                        <a href="my_articles.php"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                            My Articles
+                        </a>
+                    <?php endif; ?>
                     <?php if (User::isAdmin()): ?>
                         <a href="admin.php"
                             class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition duration-200">
@@ -114,6 +124,12 @@ $comments = $comment->getByArticle($article_id);
             Comment deleted successfully!
         </div>
     <?php endif; ?>
+    
+    <?php if (isset($_GET['updated'])): ?>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            Article updated successfully!
+        </div>
+    <?php endif; ?>
 
     <!-- Article Content -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -124,12 +140,25 @@ $comments = $comment->getByArticle($article_id);
                     <?php echo escape($art['category_name']); ?>
                 </span>
             </div>
-            <?php if (User::isAdmin()): ?>
-                <a href="index.php?delete_article=<?php echo $art['article_id']; ?>" 
-                   onclick="return confirm('Are you sure you want to delete this article?')"
-                   class="text-red-600 hover:text-red-800 font-semibold">
-                    Delete Article
-                </a>
+            
+            <!-- Article Actions -->
+            <?php if (User::isAdmin() || $is_author): ?>
+                <div class="flex gap-4">
+                    <?php if ($is_author || User::isAdmin()): ?>
+                        <!-- Edit button -->
+                        <a href="edit_article.php?id=<?php echo $art['article_id']; ?>" 
+                           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                            Edit
+                        </a>
+                        
+                        <!-- Delete button -->
+                        <a href="my_articles.php?delete_article=<?php echo $art['article_id']; ?>" 
+                           onclick="return confirm('Are you sure you want to delete this article?')"
+                           class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold">
+                            Delete
+                        </a>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -141,14 +170,33 @@ $comments = $comment->getByArticle($article_id);
             <?php endif; ?>
         </div>
 
+        <!-- Article Status Badge (if not published) -->
+        <?php if ($art['article_status'] !== 'Published'): ?>
+            <div class="mb-4">
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+                    <?php echo ucfirst($art['article_status']); ?>
+                </span>
+                <?php if ($is_author): ?>
+                    <span class="text-sm text-gray-500 ml-2">(Only you can see this)</span>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
         <div class="text-gray-700 mb-8 leading-relaxed whitespace-pre-line">
             <?php echo nl2br(escape($art['content'])); ?>
         </div>
 
-        <a href="index.php"
-            class="inline-block text-blue-600 hover:text-blue-800 font-semibold">
-            ← Back to Articles
-        </a>
+        <div class="flex justify-between items-center">
+            <a href="index.php"
+                class="inline-block text-blue-600 hover:text-blue-800 font-semibold">
+                ← Back to Articles
+            </a>
+            
+            <!-- Article stats -->
+            <div class="text-sm text-gray-500">
+                <?php echo count($comments); ?> comment(s)
+            </div>
+        </div>
     </div>
 
     <!-- Comments Section -->
